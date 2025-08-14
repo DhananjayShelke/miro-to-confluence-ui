@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 
 export default function MiroToConfluence() {
-  const [boardId, setBoardId] = useState("");
-  const [frameId, setFrameId] = useState("");
-  const [pageTitle, setPageTitle] = useState("");
+  const [boardUrl, setBoardUrl] = useState("");
+  const [frameTitles, setFrameTitles] = useState([]);
+  const [frameTitle, setFrameTitle] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleGenerate = async () => {
-    if (!boardId) {
+    if (!boardUrl) {
       alert("Please enter Miro Board ID");
       return;
     }
@@ -21,7 +21,7 @@ export default function MiroToConfluence() {
       const res = await fetch("http://localhost:8000/api/miro-to-confluence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardId, frameId,pageTitle }),
+        body: JSON.stringify({ boardUrl, frameTitles,frameTitle }),
       });
 
       if (!res.ok) {
@@ -37,34 +37,72 @@ export default function MiroToConfluence() {
     }
   };
 
+  function extractBoardId(url) {
+    const match = url.match(/board\/([^/]+)/);
+    return match ? match[1] : null;
+  }
+
+  const handleUrl = (url) => {
+      console.log(url)
+      setBoardUrl(url)
+      getAllFrames(url)
+  };
+
+  const getAllFrames = async (url) => {
+     const boardNumber =  extractBoardId(url)
+     const frameUrl =`https://api.miro.com/v2/boards/${boardNumber}/items?type=frame&limit=50`
+     console.log(frameUrl)
+
+  const options = {
+    method: 'GET',
+    headers: {
+    accept: 'application/json',
+    authorization: 'Bearer eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_YrswjSzjrhRu5SJzQSvfaAPn8pk'
+    }
+  };
+
+
+  fetch(frameUrl, options)
+    .then(res => res.json())
+    .then(res => setFrame(res.data))
+    .catch(err => setMessage(`❌ Failed: ${err.message}`));
+     
+  }
+
+  const setFrame = (data) => {
+      let frameTitles = []
+      for(const item of data){
+          frameTitles.push({id: item.id, title:item.data.title})
+      }
+      console.log(frameTitles)
+      setFrameTitles(frameTitles)
+  }
+
   return (
       <div style={{ maxWidth: "600px", margin: "50px auto", fontFamily: "Arial" }}>
         <h2>Miro → Confluence Page Generator</h2>
-        <label>Miro Board ID:</label>
+        <label>Miro URL:</label>
         <input
             type="text"
-            value={boardId}
-            onChange={(e) => setBoardId(e.target.value)}
-            placeholder="Enter Miro Board ID"
+            value={boardUrl}
+            onChange={(e) => handleUrl(e.target.value)}
+            placeholder="Enter Miro Board URL"
             style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
         />
 
         <label>Frame ID (optional):</label>
-        <input
-            type="text"
-            value={frameId}
-            onChange={(e) => setFrameId(e.target.value)}
-            placeholder="Enter Frame ID"
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
-        <label>Confluence page title:</label>
-        <input
-            type="text"
-            value={pageTitle}
-            onChange={(e) => setPageTitle(e.target.value)}
-            placeholder="Enter confluence page title"
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-        />
+        <select
+                value={frameTitle}
+                onChange={(e) => setFrameTitle(e.target.value)}
+                style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+              >
+                <option value="">-- Choose a frame --</option>
+                {frameTitles.map((frame) => (
+                  <option key={frame.id} value={frame.value}>
+                    {frame.title}
+                  </option>
+                ))}
+        </select>
         <button
             onClick={handleGenerate}
             disabled={loading}
