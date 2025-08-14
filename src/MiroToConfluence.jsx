@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export default function MiroToConfluence() {
   const [boardUrl, setBoardUrl] = useState("");
+  const [boardId, setBoardId] = useState("");
   const [frameTitles, setFrameTitles] = useState([]);
   const [frameTitle, setFrameTitle] = useState("");
 
@@ -21,7 +22,7 @@ export default function MiroToConfluence() {
       const res = await fetch("http://localhost:8000/api/miro-to-confluence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardUrl, frameTitles,frameTitle }),
+        body: JSON.stringify({ boardId,frameTitle }),
       });
 
       if (!res.ok) {
@@ -50,7 +51,8 @@ export default function MiroToConfluence() {
 
   const getAllFrames = async (url) => {
      const boardNumber =  extractBoardId(url)
-     const frameUrl =`https://api.miro.com/v2/boards/${boardNumber}/items?type=frame&limit=50`
+     setBoardId(boardNumber)
+     const frameUrl =`https://api.miro.com/v2/boards/${boardId}/items?type=frame&limit=50`
      console.log(frameUrl)
 
   const options = {
@@ -98,7 +100,7 @@ export default function MiroToConfluence() {
               >
                 <option value="">-- Choose a frame --</option>
                 {frameTitles.map((frame) => (
-                  <option key={frame.id} value={frame.value}>
+                  <option key={frame.id} value={frame.id}>
                     {frame.title}
                   </option>
                 ))}
