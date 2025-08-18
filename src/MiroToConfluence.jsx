@@ -4,7 +4,9 @@ export default function MiroToConfluence() {
   const [boardUrl, setBoardUrl] = useState("");
   const [boardId, setBoardId] = useState("");
   const [frameTitles, setFrameTitles] = useState([]);
-  const [frameTitle, setFrameTitle] = useState("");
+  const [frameId, setFrameId] = useState("");
+  const [pageTitle, setPageTitle] = useState("");
+
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -19,10 +21,11 @@ export default function MiroToConfluence() {
     setMessage("");
 
     try {
+
       const res = await fetch("http://localhost:8000/api/miro-to-confluence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ boardId,frameTitle }),
+        body: JSON.stringify({boardId,frameId,pageTitle})
       });
 
       if (!res.ok) {
@@ -30,7 +33,7 @@ export default function MiroToConfluence() {
       }
 
       const data = await res.json();
-      setMessage(`✅ Page created: ${data.confluencePageUrl}`);
+      setMessage(`✅ Page created: ${data.pageUrl}`);
     } catch (err) {
       setMessage(`❌ Failed: ${err.message}`);
     } finally {
@@ -94,8 +97,8 @@ export default function MiroToConfluence() {
 
         <label>Frame ID (optional):</label>
         <select
-                value={frameTitle}
-                onChange={(e) => setFrameTitle(e.target.value)}
+                value={frameId}
+                onChange={(e) => setFrameId(e.target.value)}
                 style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
               >
                 <option value="">-- Choose a frame --</option>
@@ -105,6 +108,14 @@ export default function MiroToConfluence() {
                   </option>
                 ))}
         </select>
+        <label>Confluence Title :</label>
+        <input
+                    type="text"
+                    value={pageTitle}
+                    onChange={(e) => setPageTitle(e.target.value)}
+                    placeholder="Enter Title for confluence page"
+                    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+                />
         <button
             onClick={handleGenerate}
             disabled={loading}
